@@ -5,8 +5,9 @@ import TaskSection from '../components/Tasks/task-section'
 import { fetchTasks } from './api/tasks'
 import axios from 'axios'
 import { getTaskSectionsFromTasks } from '../helpers/util'
+import { useTaskContext } from '../context/taskContext'
 
-const DailyTasksPage = ({ taskSections, tasks }) => {
+const DailyTasksPage = ({ taskSections }) => {
     const [sections, setSections] = useState(taskSections)
 
     async function handleDeleteCompletedTasks(date) {

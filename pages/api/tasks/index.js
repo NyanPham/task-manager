@@ -1,7 +1,6 @@
 import mongoose from 'mongoose'
 import TaskModel from '../../../models/taskModel'
 import connectDatabase from '../../../helpers/db/connectDatabase'
-import axios from 'axios'
 
 export async function fetchTasks(filter = {}) {
     await connectDatabase()

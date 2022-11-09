@@ -11,19 +11,19 @@ const taskReducer = (state, action) => {
 
     switch (type) {
         case GET_ALL_TASKS:
-            return {}
+            return state
 
         case CREATE_TASK:
-            return {}
+            return state
 
         case GET_TASK:
-            return {}
+            return state
 
         case UPDATE_TASK:
-            return {}
+            return state
 
         case DELETE_TASK:
-            return {}
+            return state
         default:
             return state
     }
