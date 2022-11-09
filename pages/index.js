@@ -2,6 +2,10 @@ import Head from 'next/head'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 
+const dev = process.env.NODE_ENV !== 'production'
+
+export const server_url = dev ? 'http://localhost:3000' : ''
+
 export default function Home() {
     const router = useRouter()
 

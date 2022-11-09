@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import axios from 'axios'
 
 const STATUS = ['approved', 'in-progress', 'in-review', 'waiting']
 
@@ -12,56 +13,87 @@ function getStatusColor(status) {
     switch (status) {
         case 'approved':
             return {
-                textColor: 'text-teal-500',
-                bgColor: 'bg-teal-300',
-                ringColor: 'focus:ring-teal-500',
+                textColor: 'text-teal-600',
+                bgColor: 'bg-teal-200',
+                ringColor: 'focus:ring-teal-600',
             }
         case 'in-progress':
             return {
                 textColor: 'text-sky-600',
-                bgColor: 'bg-sky-400',
+                bgColor: 'bg-sky-200',
                 ringColor: 'focus:ring-sky-600',
             }
         case 'in-review':
             return {
-                textColor: 'text-red-400',
+                textColor: 'text-red-500',
                 bgColor: 'bg-red-200',
                 ringColor: 'focus:ring-red-400',
             }
         case 'waiting':
             return {
-                textColor: 'text-gray-800',
-                bgColor: 'bg-gray-500',
-                ringColor: 'focus:ring-gray-800',
+                textColor: 'text-gray-600',
+                bgColor: 'bg-gray-300',
+                ringColor: 'focus:ring-gray-600',
             }
     }
 }
 
 const Task = ({ task }) => {
-    const { isCompleted, text, status } = task
+    const { isCompleted, text, status, _id } = task
     const [selectedStatus, setSelectedStatus] = useState(status)
+    const [completed, setCompleted] = useState(isCompleted)
+    const [taskText, setTaskText] = useState(text)
 
-    const completeClass = isCompleted
+    const completeClass = completed
         ? 'w-6 h-6 border border-teal-300 bg-teal-300 rounded-full flex items-center justify-center cursor-pointer'
         : 'w-6 h-6 border border-gray-400 rounded-full cursor-pointer'
 
     const { ringColor, bgColor, textColor } = getStatusColor(selectedStatus)
 
+    useEffect(() => {
+        async function updateStatus() {
+            try {
+                const res = await axios(`/api/tasks/${_id}`, {
+                    method: 'PATCH',
+                    data: {
+                        isCompleted: completed,
+                        status: selectedStatus,
+                        text: taskText,
+                    },
+                })
+
+                if (res.data.status === 'success') {
+                    // todo for UI
+                }
+            } catch (err) {
+                // todo for UI
+            }
+        }
+
+        updateStatus()
+    }, [selectedStatus, status, isCompleted, completed, taskText, text, _id])
+
     return (
-        <li className="flex gap-4">
-            <div className={completeClass}>
-                {isCompleted && (
+        <li className="flex gap-4 items-center">
+            <div
+                className={completeClass}
+                onClick={() => setCompleted((prevComplete) => !prevComplete)}
+            >
+                {completed && (
                     <FontAwesomeIcon
                         icon={faCheck}
                         className="text-white w-2/3"
                     />
                 )}
             </div>
-            <div className="grow text-gray-600 font-medium text-base">
-                {text}
-            </div>
+            <input
+                className="grow text-gray-600 font-medium text-base rounded-lg transition duration-200 py-1 px-2 outline-none focus:ring focus:ring-offset-2 focus:ring-cyan-400"
+                onChange={(e) => setTaskText(e.target.value)}
+                value={taskText}
+            />
+
             <select
-                className={`w-24 h-7 text-center flex items-center justify-center text-xs capitalize outline-none rounded-2xl appearance-none cursor-pointer transition duration-200 ${bgColor} ${textColor} focus:ring focus:ring-offset-1 ${ringColor}`}
+                className={`w-24 h-7 text-center flex items-center justify-center text-xs font-medium capitalize outline-none rounded-2xl appearance-none cursor-pointer transition duration-200 ${bgColor} ${textColor} focus:ring focus:ring-offset-1 ${ringColor}`}
                 value={selectedStatus}
                 onChange={(e) => setSelectedStatus(e.target.value)}
             >

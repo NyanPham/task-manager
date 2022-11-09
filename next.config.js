@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  reactStrictMode: true,
+    reactStrictMode: true,
+    env: {
+        MONGODB_PASSWORD: 'nhanpham',
+        MONGODB_URL:
+            'mongodb+srv://nhanpham:<PASSWORD>@cluster0.kqwb4be.mongodb.net/<DATABASE>?retryWrites=true&w=majority',
+        MONGODB_DATABASE: 'task-manager',
+        SERVER_URL: 'http://localhost:3000',
+    },
 }
 
 module.exports = nextConfig

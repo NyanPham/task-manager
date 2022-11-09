@@ -1,10 +1,12 @@
-import { useState, useRef } from 'react'
-import Card from '../Card'
+import { useRef } from 'react'
+import axios from 'axios'
 
 function AddTaskButton() {
-    // const [openAddForm, setOpenAddForm] = useState(false)
     const modalRef = useRef()
     const formRef = useRef()
+
+    const taskTextRef = useRef()
+    const dateRef = useRef()
 
     function openAddForm() {
         modalRef.current.showModal()
@@ -15,8 +17,30 @@ function AddTaskButton() {
         modalRef.current.close()
     }
 
-    function handleAddForm(e) {
+    async function handleAddForm(e) {
         e.preventDefault()
+
+        const date = dateRef.current.value
+        const text = taskTextRef.current.value
+
+        if (!date || !text) return
+        try {
+            const res = await axios('/api/tasks', {
+                method: 'POST',
+                data: {
+                    text,
+                    date,
+                },
+            })
+
+            if (res.data.status === 'success') {
+                // todo added task
+            }
+
+            // todo
+        } catch (err) {
+            //todo
+        }
     }
 
     return (
@@ -39,13 +63,23 @@ function AddTaskButton() {
                         <label htmlFor="task" className="form-label">
                             Task
                         </label>
-                        <input type="text" id="task" className="form-input" />
+                        <input
+                            type="text"
+                            id="task"
+                            className="form-input"
+                            ref={taskTextRef}
+                        />
                     </fieldset>
                     <fieldset className="form-group">
                         <label htmlFor="date" className="form-label">
                             Date
                         </label>
-                        <input type="date" id="date" className="form-input" />
+                        <input
+                            type="date"
+                            id="date"
+                            className="form-input"
+                            ref={dateRef}
+                        />
                     </fieldset>
                     <button className="form-button" type="submit">
                         Add Task

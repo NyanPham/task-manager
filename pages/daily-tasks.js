@@ -1,86 +1,62 @@
+import { useState } from 'react'
 import SectionHeader from '../components/Main/section-header'
 import AddTaskButton from '../components/Tasks/add-task-button'
 import TaskSection from '../components/Tasks/task-section'
+import { fetchTasks } from './api/tasks'
+import axios from 'axios'
+import { getTaskSectionsFromTasks } from '../helpers/util'
 
-const DUMMY_DATA = [
-    {
-        date: '2022-11-06',
-        tasks: [
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-progress',
-            },
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'approved',
-            },
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-review',
-            },
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'waiting',
-            },
-        ],
-    },
-    {
-        date: '2022-11-05',
-        tasks: [
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'approved',
-            },
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'waiting',
-            },
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-progress',
-            },
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-review',
-            },
-        ],
-    },
-    {
-        date: '2022-11-04',
-        tasks: [
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'approved',
-            },
-            {
-                text: 'Just a second task',
-                isCompleted: true,
-                status: 'waiting',
-            },
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-progress',
-            },
-            {
-                text: "Complete this right now or I'll kill you!",
-                isCompleted: false,
-                status: 'in-review',
-            },
-        ],
-    },
-]
+const DailyTasksPage = ({ taskSections, tasks }) => {
+    const [sections, setSections] = useState(taskSections)
 
-const DailyTasksPage = () => {
+    async function handleDeleteCompletedTasks(date) {
+        let completedTasks = []
+        try {
+            const res = await axios('/api/tasks/completed-tasks', {
+                method: 'POST',
+                data: {
+                    date,
+                },
+            })
+
+            if (res.data.status === 'success') {
+                completedTasks = res.data.data.tasks
+            }
+            //todo
+        } catch (err) {
+            console.log(err)
+            //todo
+        }
+
+        if (completedTasks.length === 0) return
+
+        try {
+            const res = await Promise.all(
+                completedTasks.map(
+                    async (task) =>
+                        await axios(`/api/tasks/${task._id}`, {
+                            method: 'DELETE',
+                        })
+                )
+            )
+            //todo
+        } catch (err) {
+            console.log(err)
+            //todo
+        }
+
+        setSections((currentSections) =>
+            currentSections.map((section) => {
+                if (section.date !== date) return section
+
+                return {
+                    ...section,
+                    tasks: section.tasks.filter((task) => !task.isCompleted),
+                }
+            })
+        )
+    }
+
     return (
         <div>
             <SectionHeader
@@ -88,12 +64,13 @@ const DailyTasksPage = () => {
                 description="Here are the list of your tasks. Don not forget to complete all tasks today."
             />
             <section className="space-y-7 pr-4 overflow-auto max-h-25rem scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-200">
-                {DUMMY_DATA.map((taskSectionData, index) => {
+                {sections.map((taskSectionData, index) => {
                     return (
                         <TaskSection
-                            key={`task_section${index}`}
+                            key={`task_section_${index}`}
                             date={taskSectionData.date}
                             tasks={taskSectionData.tasks}
+                            onDeleteCompletedTasks={handleDeleteCompletedTasks}
                         />
                     )
                 })}
@@ -101,6 +78,18 @@ const DailyTasksPage = () => {
             <AddTaskButton />
         </div>
     )
+}
+
+export async function getServerSideProps() {
+    const tasks = await fetchTasks({})
+
+    const taskSections = getTaskSectionsFromTasks(tasks)
+
+    return {
+        props: {
+            taskSections,
+        },
+    }
 }
 
 export default DailyTasksPage

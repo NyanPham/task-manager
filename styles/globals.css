@@ -26,7 +26,7 @@
   .form-title {
     @apply text-center font-semibold text-2xl text-gray-800
   }
-
+  
   .form {
     @apply mt-5 space-y-6
   }
