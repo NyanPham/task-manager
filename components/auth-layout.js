@@ -7,7 +7,9 @@ function AuthLayout({ children }) {
                     Login
                 </button>
             </header>
-            <main>{children}</main>
+            <main className="flex flex-col justify-center items-center">
+                {children}
+            </main>
         </div>
     )
 }
