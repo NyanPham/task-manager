@@ -1,14 +1,13 @@
+import Alert from '../components/Alert/alert'
 import Layout from '../components/layout'
-import TaskContextProvider from '../context/taskContext'
+import ContextProvider from '../context/context'
 import '../styles/globals.css'
 
 function MyApp({ Component, pageProps }) {
     return (
-        <TaskContextProvider>
-            <Layout>
-                <Component {...pageProps} />
-            </Layout>
-        </TaskContextProvider>
+        <ContextProvider>
+            <Component {...pageProps} />
+        </ContextProvider>
     )
 }
 

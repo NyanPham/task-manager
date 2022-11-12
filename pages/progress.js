@@ -1,5 +1,11 @@
+import Layout from '../components/layout'
+
 const ProgressPage = () => {
-    return <div>ProgressPage</div>
+    return (
+        <Layout>
+            <div>ProgressPage</div>
+        </Layout>
+    )
 }
 
 export default ProgressPage

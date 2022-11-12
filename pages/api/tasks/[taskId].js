@@ -1,86 +1,54 @@
-import TaskModel from '../../../models/taskModel'
-import connectDatabase from '../../../helpers/db/connectDatabase'
+import { ObjectId } from 'mongodb'
+import nextConnect from 'next-connect'
+import middleware from '../../../helpers/db/connectDatabase'
 
-async function getTask(req, res) {
-    const { taskId } = req.query
+const handler = nextConnect()
+handler.use(middleware)
 
-    try {
-        await connectDatabase()
-        const task = await TaskModel.findById(taskId)
-
-        res.status(200).json({
-            status: 'success',
-            data: {
-                task,
-            },
-        })
-    } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            error: err.message,
-            message: 'Failed to get task!',
-        })
-    }
-}
+handler.patch(updateTask)
 
 async function updateTask(req, res) {
     const { taskId } = req.query
     const { isCompleted, status, text } = req.body
 
+    if (
+        text.trim() === '' ||
+        text === '' ||
+        !status ||
+        isCompleted == null ||
+        !taskId
+    ) {
+        return res.status(422).json({
+            status: 'fail',
+            message: 'Invalid Inputs',
+        })
+    }
+
+    console.log(taskId)
+    console.log(text)
+    console.log(isCompleted)
+    console.log(status)
+
     try {
-        await connectDatabase()
-        const updatedTask = await TaskModel.findByIdAndUpdate(
-            taskId,
-            {
-                isCompleted,
-                status,
-                text,
-            },
-            {
-                new: true,
-                runValidators: true,
-            }
-        )
+        const taskToUpdate = await req.db
+            .collection('tasks')
+            .findOneAndUpdate(
+                { _id: new ObjectId(taskId) },
+                { $set: { text, isCompleted, status } }
+            )
 
         res.status(200).json({
             status: 'success',
             data: {
-                task: updatedTask,
+                task: taskToUpdate,
             },
         })
     } catch (err) {
         res.status(400).json({
             status: 'fail',
-            error: err.message,
-            message: 'Failed to update task!',
+            message: 'Failed to update task',
         })
     }
-}
-
-async function deleteTask(req, res) {
-    const { taskId } = req.query
-
-    try {
-        await connectDatabase()
-        await TaskModel.findByIdAndDelete(taskId)
-
-        res.status(204).json({
-            status: 'success',
-            data: null,
-        })
-    } catch (err) {
-        res.status(400).json({
-            status: 'fail',
-            message: 'Failed to delete task',
-            error: err.message,
-        })
-    }
-}
-
-function handler(req, res) {
-    if (req.method === 'GET') return getTask(req, res)
-    if (req.method === 'PATCH') return updateTask(req, res)
-    if (req.method === 'DELETE') return deleteTask(req, res)
 }
 
 export default handler

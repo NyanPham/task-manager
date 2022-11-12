@@ -1,5 +1,7 @@
 export function formatDate(date) {
-    return date.toLocaleString('en-US', {
+    let validDate = typeof date === 'string' ? new Date(date) : date
+
+    return validDate.toLocaleString('en-US', {
         year: 'numeric',
         day: 'numeric',
         month: 'long',

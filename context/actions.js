@@ -1,5 +1,0 @@
-export const GET_ALL_TASKS = 'get-all-tasks'
-export const CREATE_TASK = 'create-task'
-export const GET_TASK = 'get-task'
-export const UPDATE_TASK = 'update-task'
-export const DELETE_TASK = 'delete-task'

@@ -1,7 +1,10 @@
-import { useRef } from 'react'
 import axios from 'axios'
+import { useRef } from 'react'
+import { useAppContext } from '../../context/context'
 
 function AddTaskButton() {
+    const { addTask } = useAppContext()
+
     const modalRef = useRef()
     const formRef = useRef()
 
@@ -24,23 +27,15 @@ function AddTaskButton() {
         const text = taskTextRef.current.value
 
         if (!date || !text) return
-        try {
-            const res = await axios('/api/tasks', {
-                method: 'POST',
-                data: {
-                    text,
-                    date,
-                },
-            })
 
-            if (res.data.status === 'success') {
-                // todo added task
-            }
+        const res = await axios.post('/api/tasks', {
+            date,
+            text,
+        })
 
-            // todo
-        } catch (err) {
-            //todo
-        }
+        addTask(res.data.data.task)
+
+        modalRef.current.close()
     }
 
     return (

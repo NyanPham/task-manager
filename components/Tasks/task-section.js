@@ -1,19 +1,37 @@
 import { faEllipsis, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import axios from 'axios'
 import React, { useState } from 'react'
+import { useAppContext } from '../../context/context'
 import Task from './task'
 
-const TaskSection = ({ date, tasks, onDeleteCompletedTasks }) => {
+const TaskSection = ({ date, tasks }) => {
+    const { deleteCompletedTasks } = useAppContext()
+
     const [openOptions, setOpenOptions] = useState(false)
 
     const optionsElipsisClasses = openOptions
         ? 'opacity-1 pointer-events-auto'
         : 'opacity-0 pointer-events-none'
 
-    function handleDeleteClick(e) {
+    async function handleDeleteClick(e) {
         e.stopPropagation()
 
-        onDeleteCompletedTasks(date)
+        const confirmed = window.confirm(
+            `Are you sure to delete completed tasks on ${date}?`
+        )
+
+        if (!confirmed) return
+
+        await axios.delete(
+            `http://localhost:3000/api/tasks/completed-tasks/${new Date(
+                date
+            ).getTime()}`
+        )
+
+        deleteCompletedTasks(new Date(date))
+
+        setOpenOptions(false)
     }
 
     return (
@@ -48,7 +66,7 @@ const TaskSection = ({ date, tasks, onDeleteCompletedTasks }) => {
             </div>
             <ul className="space-y-3 mt-4">
                 {tasks.map((task, index) => (
-                    <Task key={`${date.trim()}_${index}`} task={task} />
+                    <Task key={`${task._id}_${index}`} task={task} />
                 ))}
             </ul>
         </div>

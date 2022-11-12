@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { useAppContext } from '../../context/context'
 import axios from 'axios'
+import useDebounce from '../../hooks/useDebounce'
 
 const STATUS = ['approved', 'in-progress', 'in-review', 'waiting']
 
@@ -39,6 +41,7 @@ function getStatusColor(status) {
 }
 
 const Task = ({ task }) => {
+    const { updateTask } = useAppContext()
     const { isCompleted, text, status, _id } = task
     const [selectedStatus, setSelectedStatus] = useState(status)
     const [completed, setCompleted] = useState(isCompleted)
@@ -50,28 +53,41 @@ const Task = ({ task }) => {
 
     const { ringColor, bgColor, textColor } = getStatusColor(selectedStatus)
 
-    useEffect(() => {
-        async function updateStatus() {
-            try {
-                const res = await axios(`/api/tasks/${_id}`, {
-                    method: 'PATCH',
-                    data: {
+    useDebounce(
+        () => {
+            if (
+                selectedStatus === status &&
+                completed === isCompleted &&
+                taskText === text
+            ) {
+                return
+            }
+
+            const updateTaskAsync = async () => {
+                const res = await axios.patch(
+                    `http://localhost:3000/api/tasks/${_id}`,
+                    {
                         isCompleted: completed,
-                        status: selectedStatus,
                         text: taskText,
-                    },
-                })
+                        status: selectedStatus,
+                    }
+                )
 
                 if (res.data.status === 'success') {
-                    // todo for UI
+                    updateTask({
+                        taskId: _id,
+                        isCompleted: completed,
+                        text: taskText,
+                        status: selectedStatus,
+                    })
                 }
-            } catch (err) {
-                // todo for UI
             }
-        }
 
-        updateStatus()
-    }, [selectedStatus, status, isCompleted, completed, taskText, text, _id])
+            updateTaskAsync()
+        },
+        350,
+        [selectedStatus, completed, taskText, _id, updateTask]
+    )
 
     return (
         <li className="flex gap-4 items-center">

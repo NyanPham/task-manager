@@ -1,17 +1,16 @@
-import mongoose from 'mongoose'
-import TaskModel from '../../../models/taskModel'
-import connectDatabase from '../../../helpers/db/connectDatabase'
+import middleware from '../../../helpers/db/connectDatabase'
+import nextConnect from 'next-connect'
 
-export async function fetchTasks(filter = {}) {
-    await connectDatabase()
-    const tasks = await TaskModel.find(filter)
+const handler = nextConnect()
 
-    return tasks
-}
+handler.use(middleware)
 
-export async function getAllTasks(req, res) {
+handler.get(getAllTasks)
+handler.post(createTask)
+
+async function getAllTasks(req, res) {
     try {
-        const tasks = await fetchTasks()
+        const tasks = await req.db.collection('tasks').find().toArray()
 
         res.status(200).json({
             status: 'success',
@@ -23,29 +22,34 @@ export async function getAllTasks(req, res) {
     } catch (err) {
         res.status(400).json({
             status: 'fail',
-            message: 'Failed to work with database',
-            error: err.message,
+            message: 'Failed to get all tasks!',
         })
-    } finally {
-        mongoose.disconnect()
     }
 }
 
 async function createTask(req, res) {
     const { text, date } = req.body
 
-    if (!text || !date) {
-        res.status(422).json({
+    if (text.trim() === '' || text === '' || !date) {
+        return res.status(422).json({
             status: 'fail',
-            message: 'Invalid Input',
+            message: 'Invalid Inputs',
         })
     }
 
     try {
-        await connectDatabase()
-        const newTask = await TaskModel.create({ text, date })
+        let newTask = {
+            date: new Date(date),
+            text,
+            isCompleted: false,
+            status: 'waiting',
+        }
 
-        res.status(200).json({
+        let createdTask = await req.db.collection('tasks').insertOne(newTask)
+
+        newTask = { ...newTask, _id: createdTask.insertedId }
+
+        res.status(201).json({
             status: 'success',
             data: {
                 task: newTask,
@@ -54,17 +58,9 @@ async function createTask(req, res) {
     } catch (err) {
         res.status(400).json({
             status: 'fail',
-            message: 'Failed to add task',
-            error: err.message,
+            message: 'Failed to create task',
         })
-    } finally {
-        mongoose.disconnect()
     }
-}
-
-function handler(req, res) {
-    if (req.method === 'GET') return getAllTasks(req, res)
-    if (req.method === 'POST') createTask(req, res)
 }
 
 export default handler

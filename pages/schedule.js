@@ -1,5 +1,11 @@
+import Layout from '../components/layout'
+
 const SchedulePage = () => {
-    return <div>SchedulePage</div>
+    return (
+        <Layout>
+            <div>SchedulePage</div>
+        </Layout>
+    )
 }
 
 export default SchedulePage
