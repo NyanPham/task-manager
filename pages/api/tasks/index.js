@@ -1,16 +1,20 @@
 import middleware from '../../../helpers/db/connectDatabase'
 import nextConnect from 'next-connect'
+import { protect } from '../../../middlewares/protect'
 
 const handler = nextConnect()
 
 handler.use(middleware)
 
-handler.get(getAllTasks)
-handler.post(createTask)
+handler.get(protect, getAllTasks)
+handler.post(protect, createTask)
 
 async function getAllTasks(req, res) {
     try {
-        const tasks = await req.db.collection('tasks').find().toArray()
+        const tasks = await req.db
+            .collection('tasks')
+            .find({ user: req.user._id.toString() })
+            .toArray()
 
         res.status(200).json({
             status: 'success',
@@ -43,6 +47,7 @@ async function createTask(req, res) {
             text,
             isCompleted: false,
             status: 'waiting',
+            user: req.user._id.toString(),
         }
 
         let createdTask = await req.db.collection('tasks').insertOne(newTask)

@@ -1,4 +1,9 @@
+import { useAppContext } from '../context/context'
+
 function AuthLayout({ children }) {
+    const { state } = useAppContext()
+    const { currentUser } = state
+
     return (
         <div>
             <header className="flex justify-between items-center py-4 px-12 shadow-lg">

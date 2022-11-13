@@ -6,7 +6,12 @@ import { useAppContext } from '../../context/context'
 import Task from './task'
 
 const TaskSection = ({ date, tasks }) => {
-    const { deleteCompletedTasks } = useAppContext()
+    const {
+        deleteCompletedTasks,
+        setAlertContent,
+        setAlertLoading,
+        setShowAlert,
+    } = useAppContext()
 
     const [openOptions, setOpenOptions] = useState(false)
 
@@ -21,17 +26,42 @@ const TaskSection = ({ date, tasks }) => {
             `Are you sure to delete completed tasks on ${date}?`
         )
 
+        setOpenOptions(false)
+
         if (!confirmed) return
 
-        await axios.delete(
-            `http://localhost:3000/api/tasks/completed-tasks/${new Date(
-                date
-            ).getTime()}`
-        )
+        try {
+            setAlertLoading(true)
+            setAlertContent({
+                title: 'Delete Tasks',
+                message: `Tasks of ${date} are being deleted`,
+                status: 'loading',
+            })
+            setShowAlert(true)
+            const res = await axios.delete(
+                `http://localhost:3000/api/tasks/completed-tasks/${new Date(
+                    date
+                ).getTime()}`
+            )
 
-        deleteCompletedTasks(new Date(date))
+            if (res.status === 204) deleteCompletedTasks(new Date(date))
 
-        setOpenOptions(false)
+            setAlertLoading(false)
+            setAlertContent({
+                title: 'Delete Tasks',
+                message: `Tasks of ${date} are deleted successfully`,
+                status: 'success',
+            })
+            setShowAlert(true)
+        } catch (err) {
+            setAlertLoading(false)
+            setAlertContent({
+                title: 'Delete Tasks',
+                message: `Tasks of ${date} failed to be deleted`,
+                status: 'fail',
+            })
+            setShowAlert(true)
+        }
     }
 
     return (

@@ -1,10 +1,11 @@
 import nextConnect from 'next-connect'
 import middleware from '../../../helpers/db/connectDatabase'
+import { protect } from '../../../middlewares/protect'
 
 const handler = nextConnect()
 handler.use(middleware)
 
-handler.delete(deleteCompletedTasks)
+handler.delete(protect, deleteCompletedTasks)
 
 async function deleteCompletedTasks(req, res) {
     const [completedTaskSlug, dateString] = req.query.slug
@@ -28,6 +29,7 @@ async function deleteCompletedTasks(req, res) {
                 $gt: date,
             },
             isCompleted: true,
+            user: req.user._id.toString(),
         })
 
         res.status(204).end()

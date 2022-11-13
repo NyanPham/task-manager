@@ -1,4 +1,5 @@
-import { createContext, useContext, useState } from 'react'
+import { useRouter } from 'next/router'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 const AppContext = createContext()
 
@@ -11,10 +12,36 @@ const inititalState = {
     message: '',
     showAlert: false,
     tasks: [],
+    currentUser: {
+        email: '',
+        name: '',
+        photo: '',
+    },
 }
 
 function ContextProvider({ children }) {
+    const router = useRouter()
     const [state, setState] = useState(inititalState)
+
+    function handleRouteChange() {
+        const currentUser = JSON.parse(localStorage.getItem('currentUser'))
+        if (currentUser.email === state.currentUser.email) return
+
+        getUserInfo(currentUser)
+    }
+
+    useEffect(() => {
+        router.events.on('routeChangeComplete', handleRouteChange)
+        const storedUser = JSON.parse(localStorage.getItem('currentUser'))
+
+        if (storedUser) {
+            getUserInfo(storedUser)
+        }
+
+        return () => {
+            router.events.off('routeChangeComplete', handleRouteChange)
+        }
+    }, [])
 
     const firstLoadTasks = (loadedTasks) => {
         setState((prevState) => ({
@@ -62,30 +89,25 @@ function ContextProvider({ children }) {
         }))
     }
 
+    const getUserInfo = ({ email, name, photo }) => {
+        setState((prevState) => ({
+            ...prevState,
+            currentUser: { email, name, photo },
+        }))
+    }
+
     const setAlertLoading = (boolean) => {
         setState((prevState) => ({
             ...prevState,
-            loading: boolean,
+            isLoading: boolean,
         }))
     }
 
-    const setAlertTitle = (title) => {
+    const setAlertContent = ({ title, message, status }) => {
         setState((prevState) => ({
             ...prevState,
-            title: title,
-        }))
-    }
-
-    const setAlertMessage = (message) => {
-        setState((prevState) => ({
-            ...prevState,
+            title,
             message,
-        }))
-    }
-
-    const setAlertStatus = (status) => {
-        setState((prevState) => ({
-            ...prevState,
             status,
         }))
     }
@@ -113,11 +135,10 @@ function ContextProvider({ children }) {
                 updateTask,
                 deleteCompletedTasks,
                 setAlertLoading,
-                setAlertTitle,
-                setAlertMessage,
+                setAlertContent,
                 setShowAlert,
-                setAlertStatus,
                 setContextTasks,
+                getUserInfo,
             }}
         >
             {children}

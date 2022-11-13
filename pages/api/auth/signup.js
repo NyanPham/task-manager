@@ -1,6 +1,10 @@
 import nextConnect from 'next-connect'
 import middleware from '../../../helpers/db/connectDatabase'
-import { hashPassword } from '../../../helpers/util'
+import {
+    createAuthToken,
+    hashPassword,
+    sendTokenWithCookie,
+} from '../../../helpers/util'
 
 const handler = nextConnect()
 
@@ -36,16 +40,29 @@ async function signUp(req, res) {
 
         const hashedPassword = await hashPassword(password)
 
-        const newUser = await req.db.collection('users').insertOne({
+        let newUser = {
             name: '',
             email,
             password: hashedPassword,
-            tasks: [],
-        })
+            photo: 'default.jpg',
+        }
+
+        const createdUser = await req.db.collection('users').insertOne(newUser)
+
+        newUser._id = createdUser.insertedId
+
+        const token = createAuthToken(newUser)
+        sendTokenWithCookie(token, req, res)
 
         res.status(201).json({
             status: 'success',
             message: 'Account created',
+            token,
+            currentUser: {
+                name: newUser.name,
+                email: newUser.email,
+                photo: newUser.photo,
+            },
         })
     } catch (err) {
         res.status(400).json({

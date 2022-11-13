@@ -26,15 +26,22 @@ const DailyTasksPage = (props) => {
                     description="Here are the list of your tasks. Don not forget to complete all tasks today."
                 />
                 <section className="space-y-7 pr-4 overflow-auto max-h-25rem scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-200">
-                    {taskSections.map((taskSectionData, index) => {
-                        return (
-                            <TaskSection
-                                key={`task_section_${index}_${taskSectionData.date}`}
-                                date={taskSectionData.date}
-                                tasks={taskSectionData.tasks}
-                            />
-                        )
-                    })}
+                    {taskSections.length === 0 && (
+                        <div className="flex items-center justify-center h-full">
+                            You have no tasks! Create one and start your day
+                            now...
+                        </div>
+                    )}
+                    {taskSections.length > 0 &&
+                        taskSections.map((taskSectionData, index) => {
+                            return (
+                                <TaskSection
+                                    key={`task_section_${index}_${taskSectionData.date}`}
+                                    date={taskSectionData.date}
+                                    tasks={taskSectionData.tasks}
+                                />
+                            )
+                        })}
                 </section>
 
                 <AddTaskButton />
@@ -43,14 +50,35 @@ const DailyTasksPage = (props) => {
     )
 }
 
-export async function getServerSideProps() {
-    const res = await axios.get('http://localhost:3000/api/tasks')
-    const tasks = res.data.data.tasks
+export async function getServerSideProps({ req }) {
+    try {
+        const fetchedRes = await axios.get('http://localhost:3000/api/tasks', {
+            withCredentials: true,
+            headers: {
+                Authorization: `Bearer ${req.cookies.jwt}`,
+            },
+        })
+        const tasks = fetchedRes.data.data.tasks
 
-    return {
-        props: {
-            tasks,
-        },
+        if (fetchedRes.data.status === 'success') {
+            return {
+                props: {
+                    tasks,
+                },
+            }
+        }
+
+        return {
+            redirect: {
+                destination: '/',
+            },
+        }
+    } catch (err) {
+        return {
+            redirect: {
+                destination: '/auth/login',
+            },
+        }
     }
 }
 

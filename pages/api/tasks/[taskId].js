@@ -1,11 +1,12 @@
 import { ObjectId } from 'mongodb'
 import nextConnect from 'next-connect'
 import middleware from '../../../helpers/db/connectDatabase'
+import { protect } from '../../../middlewares/protect'
 
 const handler = nextConnect()
 handler.use(middleware)
 
-handler.patch(updateTask)
+handler.patch(protect, updateTask)
 
 async function updateTask(req, res) {
     const { taskId } = req.query
@@ -24,16 +25,11 @@ async function updateTask(req, res) {
         })
     }
 
-    console.log(taskId)
-    console.log(text)
-    console.log(isCompleted)
-    console.log(status)
-
     try {
         const taskToUpdate = await req.db
             .collection('tasks')
             .findOneAndUpdate(
-                { _id: new ObjectId(taskId) },
+                { _id: new ObjectId(taskId), user: req.user._id.toString() },
                 { $set: { text, isCompleted, status } }
             )
 

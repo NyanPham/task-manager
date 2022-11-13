@@ -72,9 +72,20 @@ export function sendTokenWithCookie(token, req, res) {
     setCookie('jwt', token, {
         req,
         res,
-        maxAge: 60 * 60 * 24,
-        httpOnly: true,
-        secure: true,
+        maxAge: 90 * 60 * 60 * 24,
+        httpOnly: false,
+        secure: false,
         sameSite: true,
     })
+}
+
+export function changedPasswordAfter(passwordChangedAt, JWTTimestamp) {
+    if (passwordChangedAt) {
+        const passwordChangedTimestamp =
+            new Date(passwordChangedAt).getTime() / 1000
+
+        return Number(passwordChangedTimestamp) > Number(JWTTimestamp)
+    }
+
+    return false
 }

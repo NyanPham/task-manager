@@ -1,30 +1,90 @@
 import axios from 'axios'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
 import React, { useState } from 'react'
 import AuthLayout from '../../components/auth-layout'
+import { useAppContext } from '../../context/context'
 
 const SignUp = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [passwordConfirm, setPasswordConfirm] = useState('')
+    const { state, setAlertLoading, setAlertContent, setShowAlert } =
+        useAppContext()
+    const { isLoading } = state
+    const router = useRouter()
 
     async function handleCreateAccount(e) {
         e.preventDefault()
 
         if (!email || !password) {
-            return alert('Please provide email and password') // todo
+            setAlertLoading(false)
+            setAlertContent({
+                title: 'Create account',
+                message: 'Please provide email and password',
+                status: 'fail',
+            })
+
+            setShowAlert(true)
+            return
         }
 
         if (password !== passwordConfirm) {
-            return alert('Passwords do not match')
+            setAlertLoading(false)
+            setAlertContent({
+                title: 'Create account',
+                message: 'Passwords do not match',
+                status: 'fail',
+            })
+
+            setShowAlert(true)
+            return
         }
 
-        const res = await axios.post('http://localhost:3000/api/auth/signup', {
-            email,
-            password,
-            passwordConfirm,
-        })
-        // todo
+        try {
+            setAlertLoading(true)
+            setAlertContent({
+                title: 'Signup',
+                message: 'Creating your account',
+                status: 'waiting',
+            })
+
+            setShowAlert(false)
+
+            const res = await axios.post(
+                'http://localhost:3000/api/auth/signup',
+                {
+                    email,
+                    password,
+                    passwordConfirm,
+                }
+            )
+
+            const { token, currentUser } = res.data
+            localStorage.setItem('jwt', JSON.stringify(token))
+            localStorage.setItem('currentUser', JSON.stringify(currentUser))
+
+            setAlertLoading(false)
+
+            setAlertContent({
+                title: 'Signup',
+                message: 'Account created successfully!',
+                status: 'success',
+            })
+            setShowAlert(true)
+            setTimeout(() => {
+                router.replace('/daily-tasks')
+                setShowAlert(false)
+            }, 2000)
+        } catch (err) {
+            setAlertLoading(false)
+            setAlertContent({
+                title: 'Signup',
+                message: err.message,
+                status: 'fail',
+            })
+            setShowAlert(true)
+        }
     }
 
     return (
@@ -76,8 +136,9 @@ const SignUp = () => {
                         />
                     </fieldset>
                     <button
-                        className="w-full text-base font-semibold rounded-sm bg-teal-500 py-2 px-4 text-white transition transform duration-300 hover:bg-teal-400 hover:-translate-y-1 hover:shadow-md active:bg-cyan-500"
+                        className="w-full text-base font-semibold rounded-sm bg-teal-500 py-2 px-4 text-white transition transform duration-300 hover:bg-teal-400 hover:-translate-y-1 hover:shadow-md active:bg-cyan-500 disabled:bg-gray-300 disabled:text-gray-700"
                         type="submit"
+                        disabled={isLoading}
                     >
                         Create Account
                     </button>

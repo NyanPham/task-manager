@@ -41,7 +41,13 @@ async function login(req, res) {
 
         res.status(201).json({
             status: 'success',
-            message: 'Account created',
+            message: 'Logged in',
+            token,
+            currentUser: {
+                email: user.email,
+                name: user.name,
+                photo: user.photo,
+            },
         })
     } catch (err) {
         res.status(400).json({
